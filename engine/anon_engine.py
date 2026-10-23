@@ -13,10 +13,11 @@ anonymize()          — pseudônimos consistentes (mode='pseudo') ou irreversí
 verify()             — verificação pré-publicação (detector independente)
 """
 
+import json
 import re
 import unicodedata
 
-__all__ = ["normalize", "anonymize", "verify", "run_tests", "detect"]
+__all__ = ["normalize", "anonymize", "verify", "run_tests", "detect", "load_rulepack"]
 
 _CPF_RE = re.compile(r"(?<!\d)(?:\d{3}\.\d{3}\.\d{3}[-.]?\d{2}|\d{11})(?!\d)")
 _CNPJ_RE = re.compile(r"(?<!\d)(?:\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{14})(?!\d)")
@@ -108,11 +109,34 @@ def _valid_cnj(num: str, dv: str, ano: str, org: str, tr: str, origem: str) -> b
     return _cnj_dv(num + ano + org + tr + origem, dv)
 
 
+# ---------------------------------------------------------------- L2 gazetteers
+
+def load_rulepack(path: str) -> dict:
+    """Carrega rulepack de vertical (JSON em rulepacks/). Gazetteers nunca saem da rede do órgão."""
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _gazetteer_entities(text: str, gazetteers: dict):
+    """Detecta ocorrências exatas (case-insensitive) das listas do rulepack."""
+    ents = []
+    for lista_nome, itens in (gazetteers or {}).items():
+        for item in itens:
+            if not item or not isinstance(item, str) or len(item) < 4:
+                continue
+            if "A CARREGAR" in item:
+                continue
+            item_norm = normalize(item)
+            for m in re.finditer(re.escape(item_norm), text, re.IGNORECASE):
+                ents.append({"type": "GAZETTEER", "start": m.start(), "end": m.end(), "text": m.group(0)})
+    return ents
+
+
 # ---------------------------------------------------------------- L1 detectores
 
-def detect(text: str):
+def detect(text: str, gazetteers: dict = None):
     """Retorna lista de entidades detectadas: {type, start, end, text}."""
-    ents = []
+    ents = _gazetteer_entities(text, gazetteers)
     for m in _CNJ_RE.finditer(text):
         if _valid_cnj(*m.group("num", "dv", "ano", "org", "tr", "origem")):
             ents.append({"type": "CNJ", "start": m.start(), "end": m.end(), "text": m.group(0)})
@@ -141,15 +165,19 @@ def detect(text: str):
 
 # ---------------------------------------------------------------- anonimização
 
-def anonymize(text: str, mode: str = "pseudo") -> str:
+_GENERIC_MARKER["GAZETTEER"] = "[NOME_REMOVIDO]"
+
+
+def anonymize(text: str, mode: str = "pseudo", gazetteers: dict = None) -> str:
     """
     mode='pseudo': pseudônimos consistentes por documento ([CPF_1], [CPF_1]...).
     mode='anon': marcadores irreversíveis por tipo ([CPF_REMOVIDO]).
+    gazetteers: dict de listas do rulepack da vertical (L2).
     """
     if mode not in ("pseudo", "anon"):
         raise ValueError("mode deve ser 'pseudo' ou 'anon'")
     text = normalize(text)
-    ents = detect(text)
+    ents = detect(text, gazetteers)
     counters, seen = {}, {}
     pieces, last = [], 0
     for e in ents:
@@ -199,6 +227,11 @@ def run_tests() -> bool:
     check("Modo anon irreversível", "[CPF_REMOVIDO]" in out2 and "529" not in out2)
     check("verify limpa após anonimização", verify(anonymize("João OAB/DF 79173, CPF 529.982.247-25")) == [])
     check("verify detecta remanescente", len(verify("CPF 529.982.247-25 ficou")) == 1)
+    gaz = {"tribunais_e_varas": ["12ª Vara Federal"]}
+    out3 = anonymize("Ação na 12ª Vara Federal contra o réu", gazetteers=gaz)
+    check("Gazetteer (L2) anonimiza nome de órgão", "[GAZETTEER_1]" in out3 and "12ª Vara Federal" not in out3)
+    rp = load_rulepack(__import__("os").path.join(__import__("os").path.dirname(__file__), "..", "rulepacks", "jus.json"))
+    check("load_rulepack carrega vertical jus", rp["vertical"] == "jus")
     return ok
 
 

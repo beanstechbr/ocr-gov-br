@@ -1,0 +1,14 @@
+{
+  "vertical": "med",
+  "descricao": "Saúde — prontuários, laudos, exames, receituários (SUS, hospitais, clínicas)",
+  "gazetteers": {
+    "hospitais_e_ubs": ["NOMES A CARREGAR PELO ÓRGÃO — hospitais e UBS da rede local"],
+    "profissionais": ["CRM e nomes de profissionais da rede — carregado localmente"],
+    "cid10_sensiveis": ["F20-F29 (psiquiatria)", "B20-B24 (HIV)", "O80-O99 (obstetrícia)", "Z71 (aconselhamento)"]
+  },
+  "padroes_extras": {
+    "CRM": "regex: CRM[-/ ][A-Z]{2}[-/ ]\\\\d{4,7}",
+    "CNS": "Cartão Nacional de Saúde — 15 dígitos com validação módulo 11 (a implementar na engine)"
+  },
+  "nota": "Diagnósticos sensíveis (psiquiatria, HIV) elevam o rigor: fail-closed reforçado — qualquer menção a CID da lista força anonimização irreversível do bloco clínico."
+}

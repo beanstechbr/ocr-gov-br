@@ -1,0 +1,14 @@
+{
+  "vertical": "fin",
+  "descricao": "Financeiro/regulatório — PEPs, contas, operações CVM/Bacen, COAF",
+  "gazetteers": {
+    "peps": ["PEPs — Pessoas Politicamente Expostas: lista carregada localmente pelo órgão"],
+    "instituicoes": ["bancos e instituições reguladas pelo Bacen da operação"],
+    "orgaos_reguladores": ["Banco Central", "CVM", "COAF", "Receita Federal"]
+  },
+  "padroes_extras": {
+    "CONTA_BANCARIA": "agência/conta com dígito — regex contextual (exige palavra-chave 'agência'/'conta' próxima)",
+    "CNPJ": "já coberto pela engine (módulo 11)"
+  },
+  "nota": "PEPs exigem marcação específica [PEP_N] — não por sigilo, mas por dever regulatório de monitoramento reforçado (COAF)."
+}

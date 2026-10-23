@@ -1,0 +1,15 @@
+{
+  "vertical": "jus",
+  "descricao": "Jurídico — autos processuais, publicações DJEN, decisões",
+  "gazetteers": {
+    "magistrados": ["NOMES A CARREGAR PELO ÓRGÃO — lista local de magistrados da jurisdição"],
+    "tribunais_e_varas": ["TJCE", "TRF5", "12ª Vara Federal", "Juizado Especial Federal"],
+    "entidades": ["Ministério Público Federal", "Defensoria Pública da União", "OAB"]
+  },
+  "padroes_extras": {
+    "CNJ": "já coberto pela engine (ISO 7064 MOD 97-10)",
+    "OAB": "já coberto pela engine",
+    "CENTRAIS_DE_PERICIA": ["CPTC", "ITEP"]
+  },
+  "nota": "O órgão carrega suas próprias listas em gazetteers.custom (nomes de servidores, unidades). Gazetteers NUNCA saem da rede do órgão."
+}

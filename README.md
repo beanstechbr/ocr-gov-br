@@ -45,6 +45,26 @@ L5 Verificação pré-publicação com detector independente + auditoria amostra
 - Compatível com a Resolução CNJ 332/2020 (governança, transparência e auditabilidade de IA
   no Judiciário).
 
+## Arquitetura — uma engine, três verticais
+
+```
+beanstech.io          → infra/gateway (MCP, Keycloak, KMS)
+OCR Beans             → engine de OCR
+jogolimpo.ai          → O ANONIMIZADOR (engine única, marca LGPD)
+   ├─ rulepack JUS    → gazetteers: magistrados, OAB, CNJ, varas
+   ├─ rulepack MED    → gazetteers: hospitais, CRM, CID-10
+   └─ rulepack FIN    → gazetteers: PEPs, contas, CVM/Bacen
+
+medpubbr / juspubbr / finpubbr → portais que PUBLICAM dados já anonimizados
+ragjur / ragmed / ragfin       → retrieval sobre o resultado
+```
+
+**Decisão de desenho: um anonimizador só.** As verticais são rulepacks (listas e regras
+carregadas por perfil), nunca código duplicado: homologação única pelo órgão, correção de
+bug em um lugar só, métricas de qualidade num corpus dourado único e política fail-closed
+uniforme. A engine é o pedágio obrigatório entre qualquer documento público e qualquer
+API de IA por assinatura.
+
 ## Como um órgão público adota
 
 1. **Piloto gratuito** sobre um lote real de documentos do órgão (nós executamos, o órgão mede).
